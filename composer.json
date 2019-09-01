@@ -1,0 +1,34 @@
+{
+  "name": "itjackjw/yiifast",
+  "description": "yiifast 为api开发而生，构建快速应用",
+  "keywords": [
+    "yii2",
+    "yiifast"
+  ],
+  "homepage": "https://github.com/itjackjw/yiifast.git",
+  "type": "yii2-extension",
+  "license": "BSD-3-Clause",
+  "support": {
+    "source": "https://github.com/itjackjw/yiifast.git"
+  },
+  "authors": [
+    {
+      "name": "itjackjw",
+      "email": "1092428238@qq.com"
+    }
+  ],
+  "minimum-stability": "stable",
+  "require": {
+    "php": ">=5.4.0",
+    "yiisoft/yii2-swiftmailer": "2.0.7",
+    "yiisoft/yii2": ">=2.0.15"    
+  },
+  "autoload": {
+    "psr-4": {
+      "yiifast\\": ""
+    }
+  },
+  "config": {
+    "process-timeout": 1800
+  }
+}
