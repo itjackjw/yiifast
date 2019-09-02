@@ -14,8 +14,13 @@ class Application extends \yii\web\Application
     public function __construct($config = [])
     {
         if(!empty($addon=isset($_GET['addon'])?$_GET['addon']:$_POST['addon']) && !empty($config) && !empty($config['id'])){
-            $addonConfig= require Yii::getAlias('@addons').'/'.$addon.'/'.AddonHelper::getAppName($config['id']).'/'.'config'.'/'.'main.php';
-            $config=ArrayHelper::merge($config,$addonConfig);
+           require Yii::getAlias('@addons').'/'.$addon.'/'.AddonHelper::getAppName($config['id']).'/'.'config'.'/'.'bootstrap.php';
+           require Yii::getAlias('@addons').'/'.$addon.'/common/'.'config'.'/'.'bootstrap.php',
+            $config=ArrayHelper::merge(
+            	$config,
+            	require Yii::getAlias('@addons').'/'.$addon.'/common/'.'config'.'/'.'main.php',
+            	require Yii::getAlias('@addons').'/'.$addon.'/'.AddonHelper::getAppName($config['id']).'/'.'config'.'/'.'main.php'
+            );
         }
         parent::__construct($config);
     }
