@@ -29,6 +29,13 @@ class Application
     public function __construct($config=[])
     {
         Yii::$service=$this;
+
+        if(!empty($addon=isset($_GET['addon'])?$_GET['addon']:$_POST['addon']) && !empty($config) && !empty($config['id'])){
+            $addonConfig= require Yii::getAlias('@addons').'/'.$addon.'/'.AddonHelper::getAppName($config['id']).'/'.'config'.'/'.'services.php';
+            $config=ArrayHelper::merge($config,$addonConfig);
+        }
+
+
         $this->childService=$config;
     }
 
