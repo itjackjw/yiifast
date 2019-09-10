@@ -16,9 +16,22 @@ use yii\rest\ActiveController;
 use Yii;
 use yii\web\BadRequestHttpException;
 use yii\web\HttpException;
+use yiifast\helpers\StringHelper;
+use yiifast\services\BaseAction;
 
 class BaseController extends ActiveController
 {
+    use BaseAction;
+
+
+
+    public $controllerNamespace="";
+
+    /** 活跃记录的模型
+     * @var string
+     */
+    public $modelClass='';
+
     /**
      * 不用进行登录验证的方法
      * 例如： ['index', 'update', 'create', 'view', 'delete']
@@ -27,6 +40,14 @@ class BaseController extends ActiveController
      * @var array
      */
     protected $optional = [];
+
+
+    /** 不需要进行权限验证的方法
+     *  例如：['index', 'update', 'create', 'view', 'delete']
+     *  默认全部不需要进行权限验证
+     * @var array
+     */
+    protected $noCheckAuth=[];
 
     /**
      * 默认每页数量
@@ -143,14 +164,21 @@ class BaseController extends ActiveController
         }
 
 
-        // 权限方法检查，如果用了rbac，请注释掉
-        $this->checkAccess($action->id, $this->modelClass, Yii::$app->request->get());
 
         // 分页
         $page = Yii::$app->request->get('page', 1);
         $this->limit = Yii::$app->request->get('per-page', $this->pageSize);
         $this->limit > 100 && $this->limit = 100;
         $this->offset = ($page - 1) * $this->pageSize;
+
+
+        if(!empty($this->noCheckAuth) && is_array($this->noCheckAuth)){
+            if(in_array("*",$this->noCheckAuth) || in_array($action->id,$this->noCheckAuth)){
+                return true;
+            }
+        }
+
+        $this->checkAccess($action->id, $this->modelClass, Yii::$app->request->get());
 
         return true;
     }
@@ -163,22 +191,47 @@ class BaseController extends ActiveController
      */
     public function analyErr($firstErrors)
     {
-        //return Yii::$app->debris->analyErr($firstErrors);
+        return Yii::$app->debris->analyErr($firstErrors);
     }
 
     /** 获取块应用的处理数据
      * @return mixed
      */
-    public function block()
+    public function getBlock($blockname='')
     {
-        $controllerNamespace=Yii::$app->controllerNamespace;
-        $blockNamespace=str_replace("controllers","blocks",$controllerNamespace);
-        $controllerName=Yii::$app->controller->id;
-        $action=Yii::$app->controller->action->id;
-        if(class_exists($blockNamespace.'\\'.$controllerName.'\\'.$action)){
-            return  Yii::createObject($blockNamespace.'\\'.$controllerName.'\\'.$action);
-        }else{
-            throw new HttpException(406,'block 为空');
+        if(!$blockname){
+            $blockname=$this->action->id;
         }
+
+
+        $controllerNamespace=Yii::$app->controller->module->controllerNamespace;
+        $blockNamespace=str_replace("controllers","blocks",$controllerNamespace);
+
+        $controllerName=Yii::$app->controller->id;
+
+        $controllerName=str_replace(array('/','-'),array('\\','_'),$controllerName);
+
+        $action=Yii::$app->controller->action->id;
+        $blockname=StringHelper::strUcwords($blockname);
+
+        if(class_exists($blockNamespace.'\\'.$controllerName.'\\'.$blockname)){
+            return  Yii::createObject($blockNamespace.'\\'.$controllerName.'\\'.$blockname);
+        }else{
+            throw new HttpException(406,'block 为空'.$controllerNamespace);
+        }
+    }
+
+    
+    /**充值系统默认的动作
+     * @return array
+     */
+    public function actions()
+    {
+        $actions = parent::actions();
+        // 注销系统自带的实现方法
+        unset($actions['index'], $actions['update'], $actions['create'], $actions['view'], $actions['delete']);
+        // 自定义数据indexDataProvider覆盖IndexAction中的prepareDataProvider()方法
+        // $actions['index']['prepareDataProvider'] = [$this, 'indexDataProvider'];
+        return $actions;
     }
 }

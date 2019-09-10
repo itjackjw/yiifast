@@ -3,7 +3,9 @@
 
 namespace yiifast\controllers;
 
+
 use yii\rest\ActiveController;
+use yiifast\helpers\AddonHelper;
 use yiifast\helpers\StringHelper;
 use Yii;
 
@@ -38,6 +40,7 @@ class AddonsController extends ActiveController
     public function actionExecute()
     {
         //TODO初始化应用的配置数据
+        AddonHelper::initAddon($this->addonName, $this->route);
         $params = Yii::$app->request->get();
         return $this->run($this->route,$params);
     }

@@ -7,9 +7,22 @@ namespace yiifast\services;
 use yii\base\BaseObject;
 use yii\base\InvalidCallException;
 use yii\base\InvalidConfigException;
+use yii\db\ActiveRecord;
+use Yii;
+use yii\helpers\ArrayHelper;
 
 class Service extends BaseObject
 {
+
+    use BaseAction;
+
+
+
+    /** 数据模型
+     * @var string
+     */
+    public $modelClass='';
+
 
     /** 所有的服务
      * @var
@@ -80,7 +93,8 @@ class Service extends BaseObject
         if(isset($this->_callFunLog[$originMethod])){
             $method=$this->_callFunLog[$originMethod];
         }else{
-            $method="action".ucfirst($originMethod);
+            //$method="action".ucfirst($originMethod);
+            $method=$originMethod;
             $this->_callFunLog[$originMethod]=$method;
         }
         if(method_exists($this,$method)){
@@ -90,4 +104,53 @@ class Service extends BaseObject
             throw new InvalidCallException('yiifast service method is not exit.  '.get_class($this)."::$method");
         }
     }
+
+
+    /**
+     * 更新树结构
+     */
+    public function updateTree(ActiveRecord $activeRecord)
+    {
+        $activeRecord->tree="".$activeRecord->id;
+        if($activeRecord->pid!=0 && $parent = $activeRecord->parent){
+            $activeRecord->tree=$parent->tree.",".$activeRecord->id;
+        }
+        $activeRecord->save();
+    }
+
+    /**获取模型
+     * @param $id
+     * @return mixed
+     */
+    public function findByModel($id)
+    {
+        if(empty($id) || empty(($model=$this->modelClass::findOne($id)))){
+            $model=new $this->modelClass;
+            return $model->loadDefaultValues();
+        }
+        return $model;
+    }
+
+
+    /** 增加和修改数据
+     * @param $data
+     * @return mixed
+     */
+    public function save($data,$extraData=array())
+    {
+        $model=$this->findByModel($data['id']);
+        if(is_array($extraData) && !empty($extraData)){
+            foreach ($extraData as $key=>$val){
+                $model->$key=$val;
+            }
+        }
+        $model->attributes=$data;
+        if($model->validate() && $model->save()){
+            return $model->attributes;
+        }
+        Yii::$service->helper->errors->addModelErrors($model);
+        return false;
+    }
+
+
 }

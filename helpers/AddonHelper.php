@@ -44,7 +44,8 @@ class AddonHelper
     public static function getAppName($moduleId='')
     {
         $appId=[
-            'app-frontend'=>"frontend"
+            'app-frontend'=>"frontend",
+            'app-backend'=>"backend",
         ];
         if(empty($moduleId)){
             $moduleId=Yii::$app->controller->module->id;
