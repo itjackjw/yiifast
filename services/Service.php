@@ -122,7 +122,7 @@ class Service extends BaseObject
      * @param $id
      * @return mixed
      */
-    public function findByModel($id)
+    public function findByModel($id="")
     {
         if(empty($id) || empty(($model=$this->modelClass::findOne($id)))){
             $model=new $this->modelClass;
